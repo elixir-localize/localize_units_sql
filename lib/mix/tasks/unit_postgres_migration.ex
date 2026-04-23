@@ -5,7 +5,7 @@ if Code.ensure_loaded?(Ecto) do
     import Macro, only: [camelize: 1, underscore: 1]
     import Mix.Generator
     import Mix.Ecto, except: [migrations_path: 1]
-    import Cldr.Unit.Migration
+    import Localize.Unit.Migration
 
     @shortdoc "Generates a migration to create the :cldr_unit composite " <>
                 "database type for Postgres"
@@ -60,11 +60,11 @@ if Code.ensure_loaded?(Ecto) do
       use Ecto.Migration
 
       def up do
-        <%= Cldr.Unit.DDL.execute_each(Cldr.Unit.DDL.create_cldr_unit) %>
+        <%= Localize.Unit.DDL.execute_each(Localize.Unit.DDL.create_cldr_unit) %>
       end
 
       def down do
-        <%= Cldr.Unit.DDL.execute_each(Cldr.Unit.DDL.drop_cldr_unit) %>
+        <%= Localize.Unit.DDL.execute_each(Localize.Unit.DDL.drop_cldr_unit) %>
       end
     end
     """)

@@ -1,33 +1,28 @@
 ExUnit.start()
 
-{:ok, pid} = Cldr.Unit.SQL.Repo.start_link
-:ok = Ecto.Adapters.SQL.Sandbox.mode(Cldr.Unit.SQL.Repo, :manual)
+{:ok, _pid} = Localize.Unit.SQL.Repo.start_link()
+:ok = Ecto.Adapters.SQL.Sandbox.mode(Localize.Unit.SQL.Repo, :manual)
 
-defmodule Cldr.Unit.SQL.RepoCase do
+defmodule Localize.Unit.SQL.RepoCase do
   use ExUnit.CaseTemplate
 
   using do
     quote do
-      alias Cldr.Unit.SQL.Repo
+      alias Localize.Unit.SQL.Repo
 
       import Ecto
       import Ecto.Query
-      import Cldr.Unit.SQL.RepoCase
-
-      # and any other stuff
+      import Localize.Unit.SQL.RepoCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Cldr.Unit.SQL.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Localize.Unit.SQL.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Cldr.Unit.SQL.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Localize.Unit.SQL.Repo, {:shared, self()})
     end
 
     :ok
   end
-
-
 end
-

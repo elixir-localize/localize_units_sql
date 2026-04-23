@@ -1,51 +1,52 @@
-defmodule Cldr.Unit.SQL.Test do
-  use Cldr.Unit.SQL.RepoCase
+defmodule Localize.Unit.SQL.Test do
+  use Localize.Unit.SQL.RepoCase
 
   test "insert a record with a unit value" do
-    m = Cldr.Unit.new!(:meter, 100)
+    m = Localize.Unit.new!(100, "meter")
     Repo.insert(%Product{weight: m})
     assert {:ok, struct} = Repo.insert(%Product{weight: m})
-    assert Cldr.Unit.compare(m, struct.weight) == :eq
+    assert Localize.Unit.compare(m, struct.weight) == :eq
   end
 
   test "select aggregate function sum on a :cldr_unit type" do
-    m = Cldr.Unit.new!(:meter, 100, usage: :person)
+    m = Localize.Unit.new!(100, "meter", usage: "person")
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
-    sum = select(Product, [o], type(sum(o.weight), o.weight)) |> Repo.one
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
+    sum = select(Product, [o], type(sum(o.weight), o.weight)) |> Repo.one()
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
 
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
-    sum = select(Product, [o], type(sum(o.length), o.length)) |> Repo.one
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
-    assert sum.usage == :person
+    sum = select(Product, [o], type(sum(o.length), o.length)) |> Repo.one()
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
+    assert sum.usage == "person"
   end
 
   test "Repo.aggregate function sum on a :cldr_unit type" do
-    m = Cldr.Unit.new!(:meter, 100, usage: :person)
+    m = Localize.Unit.new!(100, "meter", usage: "person")
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
     sum = Repo.aggregate(Product, :sum, :weight)
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
 
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     sum = Repo.aggregate(Product, :sum, :length)
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
-    assert sum.usage == :person
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
+    assert sum.usage == "person"
   end
 
   test "Exception is raised if trying to sum different units" do
-    m = Cldr.Unit.new!(:meter, 100)
-    m2 = Cldr.Unit.new!(:foot, 100)
+    m = Localize.Unit.new!(100, "meter")
+    m2 = Localize.Unit.new!(100, "foot")
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m2})
+
     assert_raise Postgrex.Error, fn ->
       Repo.aggregate(Product, :sum, :weight)
     end
@@ -53,69 +54,70 @@ defmodule Cldr.Unit.SQL.Test do
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m2})
+
     assert_raise Postgrex.Error, fn ->
       Repo.aggregate(Product, :sum, :length)
     end
   end
 
   test "select distinct aggregate function sum on a :cldr_unit type" do
-    m = Cldr.Unit.new!(:meter, 100, usage: :person)
+    m = Localize.Unit.new!(100, "meter", usage: "person")
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m})
-    {:ok, _} = Repo.insert(%Product{weight: Cldr.Unit.new!(:meter, 200, usage: :person)})
+    {:ok, _} = Repo.insert(%Product{weight: Localize.Unit.new!(200, "meter", usage: "person")})
 
     query = select(Product, [o], type(fragment("SUM(DISTINCT ?)", o.weight), o.weight))
-    sum = query |> Repo.one
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
+    sum = query |> Repo.one()
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
 
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
-    {:ok, _} = Repo.insert(%Product{length: Cldr.Unit.new!(:meter, 200, usage: :person)})
+    {:ok, _} = Repo.insert(%Product{length: Localize.Unit.new!(200, "meter", usage: "person")})
 
     query = select(Product, [o], type(fragment("SUM(DISTINCT ?)", o.length), o.length))
-    sum = query |> Repo.one
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
-    assert sum.usage == :person
+    sum = query |> Repo.one()
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
+    assert sum.usage == "person"
   end
 
   test "select distinct aggregate function sum on a :cldr_unit_with_usage type" do
-    m = Cldr.Unit.new!(:meter, 100)
+    m = Localize.Unit.new!(100, "meter")
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
     {:ok, _} = Repo.insert(%Product{length: m})
-    {:ok, _} = Repo.insert(%Product{length: Cldr.Unit.new!(:meter, 200)})
+    {:ok, _} = Repo.insert(%Product{length: Localize.Unit.new!(200, "meter")})
 
     query = select(Product, [o], type(fragment("SUM(DISTINCT ?)", o.length), o.length))
-    sum = query |> Repo.one
-    assert Cldr.Unit.compare(sum, Cldr.Unit.new!(:meter, Decimal.new(300))) == :eq
+    sum = query |> Repo.one()
+    assert Localize.Unit.compare(sum, Localize.Unit.new!(Decimal.new(300), "meter")) == :eq
   end
 
   test "inserting a unit with a usage" do
-    weight = Cldr.Unit.new!(:meter, 200, usage: :person)
+    weight = Localize.Unit.new!(200, "meter", usage: "person")
     {:ok, _} = Repo.insert(%Product{length: weight})
 
-    result = select(Product, [o], o.length) |> Repo.one
-    assert result.usage == :person
+    result = select(Product, [o], o.length) |> Repo.one()
+    assert result.usage == "person"
   end
 
   test "filter on a unit type" do
-    m = Cldr.Unit.new!(:meter, 100)
-    m2 = Cldr.Unit.new!(:foot, 200)
+    m = Localize.Unit.new!(100, "meter")
+    m2 = Localize.Unit.new!(200, "foot")
 
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m2})
     {:ok, _} = Repo.insert(%Product{weight: m})
     {:ok, _} = Repo.insert(%Product{weight: m2})
 
-    query = from o in Product,
-              where: fragment("unit(weight)") == "meter",
-              select: sum(o.weight)
+    query =
+      from o in Product,
+        where: fragment("unit(weight)") == "meter",
+        select: sum(o.weight)
 
-    result = query |> Repo.one
+    result = query |> Repo.one()
 
-    assert result == Cldr.Unit.new!(:meter, Decimal.new(200))
+    assert result == Localize.Unit.new!(Decimal.new(200), "meter")
   end
-
 end

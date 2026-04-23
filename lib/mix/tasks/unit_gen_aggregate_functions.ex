@@ -5,15 +5,15 @@ if Code.ensure_loaded?(Ecto) do
     import Mix.Generator
     import Mix.Ecto, except: [migrations_path: 1]
     import Macro, only: [camelize: 1, underscore: 1]
-    import Cldr.Unit.Migration
+    import Localize.Unit.Migration
 
     @shortdoc "Generates a migration to create aggregate types for cldr_unit"
 
     @moduledoc """
-    Generates a migration to add a aggregation functions
-    to Postgres for the `:cldr_unit` type
+    Generates a migration to add aggregation functions
+    to Postgres for the `:cldr_unit` type.
 
-    This release includes only the `sum` aggregattion
+    This release includes only the `sum` aggregation
     function.
     """
 
@@ -59,11 +59,11 @@ if Code.ensure_loaded?(Ecto) do
       use Ecto.Migration
 
       def up do
-        <%= Cldr.Unit.DDL.execute_each(Cldr.Unit.DDL.define_aggregate_functions) %>
+        <%= Localize.Unit.DDL.execute_each(Localize.Unit.DDL.define_aggregate_functions) %>
       end
 
       def down do
-        <%= Cldr.Unit.DDL.execute_each(Cldr.Unit.DDL.drop_aggregate_functions) %>
+        <%= Localize.Unit.DDL.execute_each(Localize.Unit.DDL.drop_aggregate_functions) %>
       end
     end
     """)

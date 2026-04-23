@@ -1,4 +1,4 @@
-defmodule Cldr.Unit.Migration do
+defmodule Localize.Unit.Migration do
   @moduledoc false
 
   if Code.ensure_loaded?(Ecto.Migrator) && function_exported?(Ecto.Migrator, :migrations_path, 1) do

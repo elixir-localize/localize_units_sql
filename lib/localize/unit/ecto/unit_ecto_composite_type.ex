@@ -1,11 +1,12 @@
 if Code.ensure_loaded?(Ecto.Type) do
-  defmodule Cldr.Unit.Ecto.Composite.Type do
+  defmodule Localize.Unit.Ecto.Composite.Type do
     @moduledoc """
-    Implements the Ecto.Type behaviour for a user-defined Postgres composite type
-    called `:cldr_unit`.
+    Implements the `Ecto.Type` behaviour for a user-defined Postgres composite
+    type called `:cldr_unit`.
 
-    This is the preferred option for Postgres database since the serialized unit
-    value is stored as a decimal number,
+    This is the preferred option for Postgres databases since the serialized
+    unit value is stored as a decimal number.
+
     """
 
     @behaviour Ecto.Type
@@ -19,25 +20,24 @@ if Code.ensure_loaded?(Ecto.Type) do
     end
 
     def load({unit_name, unit_value}) do
-      with {:ok, unit} <- Cldr.Unit.new(unit_name, unit_value) do
+      with {:ok, unit} <- Localize.Unit.new(unit_value, to_string(unit_name)) do
         {:ok, unit}
       else
         _ -> :error
       end
     end
 
-    def dump(%Cldr.Unit{} = unit) do
-      {:ok, {to_string(unit.unit), unit.value}}
+    def dump(%Localize.Unit{} = unit) do
+      {:ok, {to_string(unit.name), unit.value}}
     end
 
     def dump(_) do
       :error
     end
 
-    # Casting in changesets
     @dialyzer {:nowarn_function, {:cast, 1}}
 
-    def cast(%Cldr.Unit{} = unit) do
+    def cast(%Localize.Unit{} = unit) do
       {:ok, unit}
     end
 
@@ -48,32 +48,32 @@ if Code.ensure_loaded?(Ecto.Type) do
     def cast(%{"unit" => unit_name, "value" => value})
         when (is_binary(unit_name) or is_atom(unit_name)) and is_number(value) do
       with decimal_value <- Decimal.new(value),
-           {:ok, unit} <- Cldr.Unit.new(unit_name, decimal_value) do
+           {:ok, unit} <- Localize.Unit.new(decimal_value, to_string(unit_name)) do
         {:ok, unit}
       else
-        :error -> {:error, message: "Couldn't cast value #{inspect value}"}
-        {:error, {_, message}} -> {:error, message: message}
+        :error -> {:error, message: "Couldn't cast value #{inspect(value)}"}
+        {:error, exception} -> {:error, message: Exception.message(exception)}
       end
     end
 
     def cast(%{"unit" => unit_name, "value" => value})
         when (is_binary(unit_name) or is_atom(unit_name)) and is_binary(value) do
-      with {value, ""} <- Cldr.Decimal.parse(value),
-           {:ok, unit} <- Cldr.Unit.new(unit_name, value) do
+      with {value, ""} <- Decimal.parse(value),
+           {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name)) do
         {:ok, unit}
       else
-        {:error, {_, message}} -> {:error, message: message}
+        {:error, exception} -> {:error, message: Exception.message(exception)}
         :error -> {:error, message: "Couldn't parse value #{inspect(value)}"}
       end
     end
 
     def cast(%{"unit" => unit_name, "value" => %Decimal{} = value})
         when is_binary(unit_name) or is_atom(unit_name) do
-      with {:ok, unit} <- Cldr.Unit.new(unit_name, value) do
+      with {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name)) do
         {:ok, unit}
       else
-        {:error, {_, message}} -> {:error, message: message}
-        :error -> {:error, message: "Couldn't cast value #{inspect value}"}
+        {:error, exception} -> {:error, message: Exception.message(exception)}
+        :error -> {:error, message: "Couldn't cast value #{inspect(value)}"}
       end
     end
 
@@ -81,15 +81,14 @@ if Code.ensure_loaded?(Ecto.Type) do
       cast(%{"unit" => unit_name, "value" => value})
     end
 
-    def cast(_money) do
+    def cast(_unit) do
       :error
     end
 
-    # New for ecto_sql 3.2
     def embed_as(_), do: :self
 
-    def equal?(%Cldr.Unit{} = term1, %Cldr.Unit{} = term2) do
-      case Cldr.Unit.compare(term1, term2) do
+    def equal?(%Localize.Unit{} = term1, %Localize.Unit{} = term2) do
+      case Localize.Unit.compare(term1, term2) do
         :eq -> true
         _ -> false
       end
