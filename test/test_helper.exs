@@ -6,6 +6,9 @@ ExUnit.start()
 defmodule Localize.Unit.SQL.RepoCase do
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+  alias Localize.Unit.SQL.Repo
+
   using do
     quote do
       alias Localize.Unit.SQL.Repo
@@ -17,10 +20,10 @@ defmodule Localize.Unit.SQL.RepoCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Localize.Unit.SQL.Repo)
+    :ok = Sandbox.checkout(Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Localize.Unit.SQL.Repo, {:shared, self()})
+      Sandbox.mode(Repo, {:shared, self()})
     end
 
     :ok

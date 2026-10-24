@@ -1,7 +1,7 @@
 defmodule Localize.Units.Sql.Mixfile do
   use Mix.Project
 
-  @version "2.0.0"
+  @version "2.1.0"
 
   def project do
     [
@@ -38,8 +38,10 @@ defmodule Localize.Units.Sql.Mixfile do
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => "https://github.com/elixir-localize/localize_units_sql",
-        "Readme" => "https://github.com/elixir-localize/localize_units_sql/blob/v#{@version}/README.md",
-        "Changelog" => "https://github.com/elixir-localize/localize_units_sql/blob/v#{@version}/CHANGELOG.md"
+        "Readme" =>
+          "https://github.com/elixir-localize/localize_units_sql/blob/v#{@version}/README.md",
+        "Changelog" =>
+          "https://github.com/elixir-localize/localize_units_sql/blob/v#{@version}/CHANGELOG.md"
       },
       files: [
         "lib",
@@ -72,14 +74,15 @@ defmodule Localize.Units.Sql.Mixfile do
 
   defp aliases do
     [
-     test: ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      test: ["ecto.drop --quiet", "ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
 
   defp deps do
     [
-      {:localize, "~> 0.22"},
+      {:localize, "~> 1.4"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ecto, "~> 3.13"},
       {:ecto_sql, "~> 3.13"},
       {:postgrex, "~> 0.19"},

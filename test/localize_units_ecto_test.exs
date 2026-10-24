@@ -57,6 +57,15 @@ defmodule Localize.Unit.Ecto.Test do
                {:ok, Localize.Unit.new!(Decimal.new(100), "meter")}
     end
 
+    # A string that is a number followed by more text is no value: it is a
+    # cast error, where it raised WithClauseError.
+    test "#{inspect(ecto_type_module)}: cast a value with trailing text is an error" do
+      assert {:error, [message: message]} =
+               unquote(ecto_type_module).cast(%{"unit" => "meter", "value" => "12abc"})
+
+      assert message =~ "12abc"
+    end
+
     test "#{inspect(ecto_type_module)}: cast a map with string keys and numeric value" do
       assert unquote(ecto_type_module).cast(%{"unit" => "meter", "value" => 100}) ==
                {:ok, Localize.Unit.new!(Decimal.new(100), "meter")}

@@ -7,6 +7,9 @@ defmodule Localize.Unit.DDL do
 
   @default_db :postgres
 
+  # The application whose priv directory holds the SQL files.
+  @app Mix.Project.config()[:app]
+
   @supported_db_types :code.priv_dir(:localize_units_sql)
                       |> Path.join("SQL")
                       |> File.ls!()
@@ -134,8 +137,7 @@ defmodule Localize.Unit.DDL do
   def execute_each(sql) do
     sql
     |> String.split("\n\n\n")
-    |> Enum.map(&execute/1)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &execute/1)
   end
 
   @doc """
@@ -174,10 +176,10 @@ defmodule Localize.Unit.DDL do
 
   defp read_sql_file(db_type, file_name) do
     raise ArgumentError,
-          "Database type #{db_type} does not have a SQL definition " <> "file #{inspect(file_name)}"
+          "Database type #{db_type} does not have a SQL definition " <>
+            "file #{inspect(file_name)}"
   end
 
-  @app Mix.Project.config()[:app]
   defp base_dir(db_type) do
     :code.priv_dir(@app)
     |> Path.join(["SQL", "/#{db_type}"])

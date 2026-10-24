@@ -26,42 +26,30 @@ if Code.ensure_loaded?(Ecto.Type) do
     defdelegate embed_as(term), to: Localize.Unit.Ecto.Composite.Type
     defdelegate equal?(term1, term2), to: Localize.Unit.Ecto.Composite.Type
 
-    def type() do
+    def type do
       :map
     end
 
     def load(%{"unit" => unit_name, "value" => value, "usage" => usage}) when is_binary(value) do
-      with {value, ""} <- Decimal.parse(value),
-           {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name), usage: usage) do
-        {:ok, unit}
-      else
-        _ -> :error
+      case Decimal.parse(value) do
+        {decimal, ""} -> loaded(Localize.Unit.new(decimal, to_string(unit_name), usage: usage))
+        _not_a_number -> :error
       end
     end
 
     def load(%{"unit" => unit_name, "value" => value, "usage" => usage}) when is_integer(value) do
-      with {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name), usage: usage) do
-        {:ok, unit}
-      else
-        _ -> :error
-      end
+      loaded(Localize.Unit.new(value, to_string(unit_name), usage: usage))
     end
 
     def load(%{"unit" => unit_name, "value" => value}) when is_binary(value) do
-      with {value, ""} <- Decimal.parse(value),
-           {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name)) do
-        {:ok, unit}
-      else
-        _ -> :error
+      case Decimal.parse(value) do
+        {decimal, ""} -> loaded(Localize.Unit.new(decimal, to_string(unit_name)))
+        _not_a_number -> :error
       end
     end
 
     def load(%{"unit" => unit_name, "value" => value}) when is_integer(value) do
-      with {:ok, unit} <- Localize.Unit.new(value, to_string(unit_name)) do
-        {:ok, unit}
-      else
-        _ -> :error
-      end
+      loaded(Localize.Unit.new(value, to_string(unit_name)))
     end
 
     def dump(%Localize.Unit{name: unit_name, value: value}) do
@@ -71,5 +59,9 @@ if Code.ensure_loaded?(Ecto.Type) do
     def dump(_) do
       :error
     end
+
+    # `Ecto.Type.load/1` answers `:error` for a value it cannot load.
+    defp loaded({:ok, unit}), do: {:ok, unit}
+    defp loaded({:error, _exception}), do: :error
   end
 end

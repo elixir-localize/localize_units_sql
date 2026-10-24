@@ -112,9 +112,10 @@ defmodule Localize.Unit.SQL.Test do
     {:ok, _} = Repo.insert(%Product{weight: m2})
 
     query =
-      from o in Product,
+      from(o in Product,
         where: fragment("unit(weight)") == "meter",
         select: sum(o.weight)
+      )
 
     result = query |> Repo.one()
 

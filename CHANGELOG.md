@@ -2,6 +2,16 @@
 
 **Note** that `localize_units_sql` is supported on Elixir 1.17 and later only.
 
+## Localize Units SQL v2.1.0
+
+This is the changelog for Localize Units SQL v2.1.0 released on October 24th, 2026.
+
+### Bug Fixes
+
+* Requires `localize ~> 1.4`. Version 2.0.0 required `localize ~> 0.22`, which no Localize 1.x release satisfies, so it could not be installed alongside Localize 1.0 or later.
+
+* `cast/1` of every type returns a cast error for a string value with trailing text, such as `"12abc"`, where it raised `WithClauseError`.
+
 ## Localize Units SQL v2.0.0
 
 This is the changelog for Localize Units SQL v2.0.0 released on April 24th, 2026.
