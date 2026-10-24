@@ -16,7 +16,9 @@ defmodule Localize.Units.Sql.Mixfile do
       deps: deps(),
       description: description(),
       package: package(),
-      test_coverage: [tool: ExCoveralls],
+      # The test repo and the test schema are in test/support and are not
+      # part of the package.
+      test_coverage: [ignore_modules: [Localize.Unit.SQL.Repo, Product]],
       aliases: aliases(),
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
