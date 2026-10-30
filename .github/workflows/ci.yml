@@ -93,6 +93,13 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      # Postgrex is compiled against db_connection, so every dependency is
+      # compiled before the forced rebuild below. Without this the rebuild
+      # fails on a cold cache — `mix deps.get` fetches db_connection but
+      # does not compile it, and Postgrex cannot load DBConnection.Query.
+      - name: Compile dependencies
+        run: mix deps.compile
+
       # Postgrex reads :json_library from the config when it is compiled,
       # and a restored _build may hold a Postgrex compiled with another one.
       - name: Compile Postgrex with the configured JSON library

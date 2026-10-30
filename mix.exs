@@ -89,8 +89,7 @@ defmodule Localize.Units.Sql.Mixfile do
       {:postgrex, "~> 0.19"},
       {:benchee, "~> 1.0", optional: true, only: :dev, runtime: false},
       {:exprof, "~> 0.2", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.22", only: [:dev, :release], runtime: false},
-      {:earmark, "~> 1.4", only: [:dev, :release], runtime: false}
+      {:ex_doc, "~> 0.22", only: [:dev, :release], runtime: false}
     ] ++ maybe_json_polyfill()
   end
 
