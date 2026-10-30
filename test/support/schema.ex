@@ -9,3 +9,13 @@ defmodule Product do
     timestamps()
   end
 end
+
+defmodule MapProduct do
+  use Ecto.Schema
+
+  schema "map_products" do
+    field(:weight, Localize.Unit.Ecto.Map.Type)
+    field(:length, Localize.UnitWithUsage.Ecto.Map.Type)
+    timestamps()
+  end
+end

@@ -12,14 +12,35 @@ if Code.ensure_loaded?(Ecto.Type) do
 
     @behaviour Ecto.Type
 
+    alias Localize.Unit.Ecto.Composite.Type, as: UnitType
+
+    @impl Ecto.Type
     def type do
       :cldr_unit_with_usage
     end
 
-    def blank?(_) do
+    @doc """
+    Returns whether a unit is blank, which it never is.
+
+    ### Arguments
+
+    * `unit` is any term.
+
+    ### Returns
+
+    * `false`.
+
+    ### Examples
+
+        iex> Localize.UnitWithUsage.Ecto.Composite.Type.blank?(Localize.Unit.new!(1, "meter"))
+        false
+
+    """
+    def blank?(_unit) do
       false
     end
 
+    @impl Ecto.Type
     def load({unit_name, unit_value, unit_usage}) when unit_usage in [nil, ""] do
       loaded(Localize.Unit.new(unit_value, to_string(unit_name)))
     end
@@ -28,6 +49,11 @@ if Code.ensure_loaded?(Ecto.Type) do
       loaded(Localize.Unit.new(unit_value, to_string(unit_name), usage: to_string(unit_usage)))
     end
 
+    def load(_value) do
+      :error
+    end
+
+    @impl Ecto.Type
     def dump(%Localize.Unit{} = unit) do
       {:ok, {to_string(unit.name), unit.value, unit.usage && to_string(unit.usage)}}
     end
@@ -38,6 +64,7 @@ if Code.ensure_loaded?(Ecto.Type) do
 
     @dialyzer {:nowarn_function, {:cast, 1}}
 
+    @impl Ecto.Type
     def cast(%Localize.Unit{} = unit) do
       {:ok, unit}
     end
@@ -49,7 +76,7 @@ if Code.ensure_loaded?(Ecto.Type) do
     def cast(%{"unit" => unit_name, "value" => value, "usage" => usage})
         when (is_binary(unit_name) or is_atom(unit_name)) and is_number(value) do
       value
-      |> Decimal.new()
+      |> UnitType.to_decimal()
       |> cast_unit(unit_name, usage)
     end
 
@@ -66,6 +93,12 @@ if Code.ensure_loaded?(Ecto.Type) do
       cast_unit(value, unit_name, usage)
     end
 
+    # The usage is optional, as it is in the atom-keyed form below.
+    def cast(%{"unit" => _unit_name, "value" => _value} = unit)
+        when not is_map_key(unit, "usage") do
+      cast(Map.put(unit, "usage", nil))
+    end
+
     def cast(%{unit: unit_name, value: value} = unit) do
       cast(%{"unit" => unit_name, "value" => value, "usage" => Map.get(unit, :usage)})
     end
@@ -74,13 +107,14 @@ if Code.ensure_loaded?(Ecto.Type) do
       :error
     end
 
-    def embed_as(_), do: :self
+    @impl Ecto.Type
+    def embed_as(_format), do: :self
 
+    # Two units are equal when they would be stored the same: the same unit
+    # name, the same value and the same usage.
+    @impl Ecto.Type
     def equal?(%Localize.Unit{} = term1, %Localize.Unit{} = term2) do
-      case Localize.Unit.compare(term1, term2) do
-        :eq -> true
-        _ -> false
-      end
+      UnitType.equal?(term1, term2) and to_usage(term1.usage) == to_usage(term2.usage)
     end
 
     def equal?(term1, term2), do: term1 == term2

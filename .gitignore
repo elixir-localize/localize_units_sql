@@ -23,4 +23,8 @@ erl_crash.dump
 money_sql-*.tar
 
 
+.DS_Store
 
+
+# Claude session context (local only)
+CLAUDE.local.md

@@ -16,6 +16,9 @@ config :localize,
   default_locale: :en,
   allow_runtime_locale_download: true
 
-config :postgrex, :json_library, :json
+# Postgrex calls `encode_to_iodata!/1` and `decode!/1`, which `JSON`
+# (Elixir 1.18 and later) provides. On Elixir 1.17 the tests that write a map
+# to the database are skipped.
+config :postgrex, :json_library, JSON
 
 config :logger, level: :error

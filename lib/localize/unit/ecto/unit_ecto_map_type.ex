@@ -21,37 +21,31 @@ if Code.ensure_loaded?(Ecto.Type) do
 
     @behaviour Ecto.Type
 
+    @impl Ecto.Type
     defdelegate cast(unit), to: Localize.Unit.Ecto.Composite.Type
 
+    @impl Ecto.Type
     defdelegate embed_as(term), to: Localize.Unit.Ecto.Composite.Type
+    @impl Ecto.Type
     defdelegate equal?(term1, term2), to: Localize.Unit.Ecto.Composite.Type
 
+    @impl Ecto.Type
     def type do
       :map
     end
 
-    def load(%{"unit" => unit_name, "value" => value, "usage" => usage}) when is_binary(value) do
-      case Decimal.parse(value) do
-        {decimal, ""} -> loaded(Localize.Unit.new(decimal, to_string(unit_name), usage: usage))
-        _not_a_number -> :error
+    @impl Ecto.Type
+    def load(%{"unit" => unit_name, "value" => value} = unit) do
+      with {:ok, value} <- load_value(value) do
+        loaded(new_unit(value, unit_name, Map.get(unit, "usage")))
       end
     end
 
-    def load(%{"unit" => unit_name, "value" => value, "usage" => usage}) when is_integer(value) do
-      loaded(Localize.Unit.new(value, to_string(unit_name), usage: usage))
+    def load(_value) do
+      :error
     end
 
-    def load(%{"unit" => unit_name, "value" => value}) when is_binary(value) do
-      case Decimal.parse(value) do
-        {decimal, ""} -> loaded(Localize.Unit.new(decimal, to_string(unit_name)))
-        _not_a_number -> :error
-      end
-    end
-
-    def load(%{"unit" => unit_name, "value" => value}) when is_integer(value) do
-      loaded(Localize.Unit.new(value, to_string(unit_name)))
-    end
-
+    @impl Ecto.Type
     def dump(%Localize.Unit{name: unit_name, value: value}) do
       {:ok, %{"unit" => to_string(unit_name), "value" => to_string(value)}}
     end
@@ -63,5 +57,24 @@ if Code.ensure_loaded?(Ecto.Type) do
     # `Ecto.Type.load/1` answers `:error` for a value it cannot load.
     defp loaded({:ok, unit}), do: {:ok, unit}
     defp loaded({:error, _exception}), do: :error
+
+    defp load_value(value) when is_number(value), do: {:ok, value}
+
+    defp load_value(value) when is_binary(value) do
+      case Decimal.parse(value) do
+        {decimal, ""} -> {:ok, decimal}
+        _not_a_number -> :error
+      end
+    end
+
+    defp load_value(_value), do: :error
+
+    defp new_unit(value, unit_name, usage) when usage in [nil, ""] do
+      Localize.Unit.new(value, to_string(unit_name))
+    end
+
+    defp new_unit(value, unit_name, usage) do
+      Localize.Unit.new(value, to_string(unit_name), usage: to_string(usage))
+    end
   end
 end

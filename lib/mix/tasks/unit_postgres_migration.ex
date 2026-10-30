@@ -22,7 +22,7 @@ if Code.ensure_loaded?(Ecto) do
     @dialyzer {:no_return, run: 1}
 
     def run(args) do
-      no_umbrella!("units.gen.cldr_unit")
+      no_umbrella!("units.gen.postgres.cldr_units_migration")
       repos = parse_repo(args)
       name = "add_cldr_unit_type_to_postgres"
 

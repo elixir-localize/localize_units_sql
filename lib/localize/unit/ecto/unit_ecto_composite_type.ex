@@ -11,18 +11,42 @@ if Code.ensure_loaded?(Ecto.Type) do
 
     @behaviour Ecto.Type
 
+    @impl Ecto.Type
     def type do
       :cldr_unit
     end
 
-    def blank?(_) do
+    @doc """
+    Returns whether a unit is blank, which it never is.
+
+    ### Arguments
+
+    * `unit` is any term.
+
+    ### Returns
+
+    * `false`.
+
+    ### Examples
+
+        iex> Localize.Unit.Ecto.Composite.Type.blank?(Localize.Unit.new!(1, "meter"))
+        false
+
+    """
+    def blank?(_unit) do
       false
     end
 
+    @impl Ecto.Type
     def load({unit_name, unit_value}) do
       loaded(Localize.Unit.new(unit_value, to_string(unit_name)))
     end
 
+    def load(_value) do
+      :error
+    end
+
+    @impl Ecto.Type
     def dump(%Localize.Unit{} = unit) do
       {:ok, {to_string(unit.name), unit.value}}
     end
@@ -33,6 +57,7 @@ if Code.ensure_loaded?(Ecto.Type) do
 
     @dialyzer {:nowarn_function, {:cast, 1}}
 
+    @impl Ecto.Type
     def cast(%Localize.Unit{} = unit) do
       {:ok, unit}
     end
@@ -44,7 +69,7 @@ if Code.ensure_loaded?(Ecto.Type) do
     def cast(%{"unit" => unit_name, "value" => value})
         when (is_binary(unit_name) or is_atom(unit_name)) and is_number(value) do
       value
-      |> Decimal.new()
+      |> to_decimal()
       |> cast_unit(unit_name)
     end
 
@@ -69,16 +94,32 @@ if Code.ensure_loaded?(Ecto.Type) do
       :error
     end
 
-    def embed_as(_), do: :self
+    @impl Ecto.Type
+    def embed_as(_format), do: :self
 
+    # Two units are equal when they would be stored the same: the same unit
+    # name and the same value. `Localize.Unit.compare/2` is not used because
+    # it converts between units and compares the values as floats.
+    @impl Ecto.Type
     def equal?(%Localize.Unit{} = term1, %Localize.Unit{} = term2) do
-      case Localize.Unit.compare(term1, term2) do
-        :eq -> true
-        _ -> false
-      end
+      term1.name == term2.name and same_value?(term1.value, term2.value)
     end
 
     def equal?(term1, term2), do: term1 == term2
+
+    @doc false
+    def same_value?(value1, value2) when is_nil(value1) or is_nil(value2) do
+      value1 == value2
+    end
+
+    def same_value?(value1, value2) do
+      Decimal.equal?(to_decimal(value1), to_decimal(value2))
+    end
+
+    @doc false
+    def to_decimal(%Decimal{} = value), do: value
+    def to_decimal(value) when is_integer(value), do: Decimal.new(value)
+    def to_decimal(value) when is_float(value), do: Decimal.from_float(value)
 
     # `Ecto.Type.load/1` answers `:error` for a value it cannot load, and
     # `cast/1` an error with a message.

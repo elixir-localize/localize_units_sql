@@ -1,7 +1,7 @@
 # Introduction to Localize Units SQL
 
 [![Hex pm](http://img.shields.io/hexpm/v/localize_units_sql.svg?style=flat)](https://hex.pm/packages/localize_units_sql)
-[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://github.com/elixir-localize/localize_units_sql/blob/master/LICENSE.md)
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://github.com/elixir-localize/localize_units_sql/blob/v2.1.0/LICENSE.md)
 
 `localize_units_sql` implements a set of functions to store and retrieve data structured as a `Localize.Unit.t()` type that represents a unit of measure and a value. See [localize](https://hex.pm/packages/localize) for details of using `Localize.Unit`. Note that `localize_units_sql` depends on `localize`.
 
@@ -19,7 +19,7 @@
 
 > #### Make sure the Ecto type and the database type match! {: .warning}
 >
-> It's important that the Ecto type `Localize.Unit.Ecto.Composite.Type` is matched with the correct database type in the migration: `:cldr_unit` or `:cldr_unit_with_usage`. Similarly `Localize.Unit.Ecto.Map.Type` must be matched with the database type `:map` in the migration.
+> It's important that each Ecto type is matched with its database type in the migration: `Localize.Unit.Ecto.Composite.Type` with `:cldr_unit`, `Localize.UnitWithUsage.Ecto.Composite.Type` with `:cldr_unit_with_usage`, and `Localize.Unit.Ecto.Map.Type` or `Localize.UnitWithUsage.Ecto.Map.Type` with `:map`.
 
 ## Serializing to a Postgres database with Ecto
 
@@ -37,13 +37,13 @@ mix units.gen.postgres.cldr_units_migration
 
 ```bash
 mix ecto.migrate
-21:01:29.527 [info]  == Running 20200517121207 Localize.Unit.SQL.Repo.Migrations.AddCldrUnitTypeToPostgres.up/0 forward
+09:56:49.567 [info] == Running 20161007234652 MyApp.Repo.Migrations.AddCldrUnitTypeToPostgres.up/0
 
-21:01:29.529 [info]  execute "CREATE TYPE public.cldr_unit AS (unit varchar, value numeric);"
+09:56:49.570 [info] execute "CREATE TYPE public.cldr_unit AS (unit varchar, value numeric);"
 
-21:01:29.532 [info]  execute "CREATE TYPE public.cldr_unit_with_usage AS (unit varchar, value numeric, usage varchar);"
+09:56:49.574 [info] execute "CREATE TYPE public.cldr_unit_with_usage AS (unit varchar, value numeric, usage varchar);"
 
-21:01:29.546 [info]  == Migrated 20200517121207 in 0.0s
+09:56:49.576 [info] == Migrated 20161007234652 in 0.0s
 ```
 
 3. Create your database migration with the new type (don't forget to `mix ecto.migrate` as well):
@@ -174,7 +174,9 @@ iex> Repo.aggregate(Product, :sum, :weight)
 **Note** that to preserve the integrity of `Localize.Unit` it is not permissible to aggregate units that have different unit types. If you attempt to aggregate units with different unit types the query will abort and an exception will be raised:
 
 ```
-** (Postgrex.Error) ERROR 22033 (): Incompatible units. Expected all unit names to be meter
+** (Postgrex.Error) ERROR 22033 (invalid_sql_json_subscript) Incompatible units. Expected all unit names to be kilogram
+
+    hint: Please ensure all columns have the same unit type
 ```
 
 ### Order_by with cldr_unit type
@@ -197,7 +199,7 @@ iex> Repo.all(q)
 ```elixir
 def deps do
   [
-    {:localize_units_sql, "~> 2.0"},
+    {:localize_units_sql, "~> 2.1"},
     ...
   ]
 end

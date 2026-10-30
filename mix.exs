@@ -18,7 +18,7 @@ defmodule Localize.Units.Sql.Mixfile do
       package: package(),
       # The test repo and the test schema are in test/support and are not
       # part of the package.
-      test_coverage: [ignore_modules: [Localize.Unit.SQL.Repo, Product]],
+      test_coverage: [ignore_modules: [Localize.Unit.SQL.Repo, Product, MapProduct]],
       aliases: aliases(),
       elixirc_paths: elixirc_paths(Mix.env()),
       dialyzer: [
@@ -48,7 +48,6 @@ defmodule Localize.Units.Sql.Mixfile do
       files: [
         "lib",
         "priv/SQL",
-        "config",
         "mix.exs",
         "README.md",
         "CHANGELOG.md",
@@ -95,11 +94,16 @@ defmodule Localize.Units.Sql.Mixfile do
     ] ++ maybe_json_polyfill()
   end
 
+  # json_polyfill (the EEP 68 :json module for OTP 26) is provided for
+  # this project's own dev/test/CI only. `only:` dependencies never enter
+  # the hex package requirements, so which OTP publishes is irrelevant.
+  # OTP 26 consumers add {:json_polyfill, "~> 0.2 or ~> 1.0"} to their own
+  # deps, as the localize README documents.
   defp maybe_json_polyfill do
     if Code.ensure_loaded?(:json) do
       []
     else
-      [{:json_polyfill, "~> 0.2 or ~> 1.0"}]
+      [{:json_polyfill, "~> 0.2 or ~> 1.0", only: [:dev, :test]}]
     end
   end
 
